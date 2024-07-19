@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الكتابة السريعة</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background-color: #ffefd5;
+            overflow: hidden;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .word {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+        .input-field {
+            font-size: 1.5em;
+            padding: 10px;
+            width: 300px;
+        }
+        .score, .high-score, .timer, .user-info {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        /* Styling for dropdown */
+        .dropdown-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: black;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+        .dropdown-btn.opened {
+            transform: translateX(calc(100% - -88px));
+        }
+        .dropdown {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .dropdown.active {
+            transform: translateX(0%);
+        }
+        .dropdown-item {
+            padding: 20px 0;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: white;
+        }
+        .dropdown-item:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Top scores */
+        .top-scores-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 3;
+        }
+        .top-scores {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100vh;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 2;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            overflow-y: auto;
+        }
+        .top-scores.active {
+            transform: translateX(0%);
+        }
+        .top-scores-item {
+            padding: 15px;
+            font-size: 1.2em;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <button class="dropdown-btn" onclick="toggleDropdown()">☰</button>
+    <button class="top-scores-btn" onclick="toggleTopScores()">توب</button>
+
+    <div id="dropdown" class="dropdown">
+        <div class="dropdown-item" onclick="openPage('index.html')">الصفحة الرئيسية</div>
+        <div class="dropdown-item" onclick="openPage('MN.html')">أسئلة رايق</div>
+        <div class="dropdown-item" onclick="openPage('Ss.html')">سبايدر مان</div>
+        <div class="dropdown-item" onclick="changeUserName()">تعديل الاسم</div>
+    </div>
+
+    <div id="topScores" class="top-scores"></div>
+
+    <div class="container">
+        <div class="user-info" id="userInfo">مرحبا, <span id="userName"></span></div>
+        <div class="timer" id="timer">الوقت: 5</div>
+        <div class="word" id="word"></div>
+        <input type="text" id="inputField" class="input-field" placeholder="اكتب الكلمة هنا">
+        <div class="score" id="score">النقاط: 0</div>
+        <div class="high-score" id="highScore">أعلى النقاط: 0</div>
+    </div>
+
+    <script>
+        let words = [];
+        let currentWord = '';
+        let score = 0;
+        let highScore = 0;
+        let timeLeft = 5;
+        let timerInterval;
+        let currentUser = localStorage.getItem('currentUser') || '';
+
+        const wordElement = document.getElementById('word');
+        const inputField = document.getElementById('inputField');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const timerElement = document.getElementById('timer');
+        const userNameElement = document.getElementById('userName');
+        const userInfoElement = document.getElementById('userInfo');
+        const topScoresElement = document.getElementById('topScores');
+
+        if (!currentUser) {
+            currentUser = prompt('أدخل اسم المستخدم الخاص بك:');
+            localStorage.setItem('currentUser', currentUser);
+        }
+
+        userNameElement.textContent = currentUser;
+        highScore = localStorage.getItem(currentUser + '_highScore') || 0;
+        highScoreElement.textContent = `أعلى النقاط: ${highScore}`;
+
+        function loadWords() {
+            fetch('Q.html')
+                .then(response => response.text())
+                .then(data => {
+                    words = data.split('\n').map(word => word.trim()).filter(word => word.length > 0);
+                    newWord();
+                });
+        }
+
+        function getRandomWord() {
+            return words[Math.floor(Math.random() * words.length)];
+        }
+
+        function newWord() {
+            currentWord = getRandomWord();
+            wordElement.textContent = currentWord;
+            inputField.value = '';
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 7;
+            timerElement.textContent = `الوقت: ${timeLeft}`;
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerElement.textContent = `الوقت: ${timeLeft}`;
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                updateHighScore();
+                score = 0;
+                scoreElement.textContent = `النقاط: ${score}`;
+                newWord();
+            }
+        }
+
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem(currentUser + '_highScore', highScore);
+                highScoreElement.textContent = `أعلى النقاط: ${highScore}`;
+            }
+            updateTopScores();
+        }
+
+        function updateTopScores() {
+            let topScores = JSON.parse(localStorage.getItem('topScores')) || [];
+            const userIndex = topScores.findIndex(item => item.user === currentUser);
+
+            if (userIndex > -1) {
+                // User already exists in top scores
+                if (topScores[userIndex].score < highScore) {
+                    topScores[userIndex].score = highScore;
+                }
+            } else {
+                // New user
+                topScores.push({ user: currentUser, score: highScore });
+            }
+
+            topScores.sort((a, b) => b.score - a.score);
+            topScores = topScores.slice(0, 10);
+            localStorage.setItem('topScores', JSON.stringify(topScores));
+            displayTopScores();
+        }
+
+        function displayTopScores() {
+            const topScores = JSON.parse(localStorage.getItem('topScores')) || [];
+            topScoresElement.innerHTML = topScores.map(item => 
+                `<div class="top-scores-item">${item.user}: ${item.score}</div>`
+            ).join('');
+        }
+
+        inputField.addEventListener('input', () => {
+            if (inputField.value === currentWord) {
+                score++;
+                scoreElement.textContent = `النقاط: ${score}`;
+                newWord();
+            }
+        });
+
+        window.onload = function() {
+            loadWords();
+            displayTopScores();
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.toggle('active');
+
+            const dropdownBtn = document.querySelector('.dropdown-btn');
+            dropdownBtn.classList.toggle('opened');
+        }
+
+        function toggleTopScores() {
+    const topScores = document.getElementById('topScores');
+    topScores.classList.toggle('active');
+
+    const topScoresBtn = document.querySelector('.top-scores-btn');
+    topScoresBtn.style.transform = topScores.classList.contains('active') ? 'translateX(-130px)' : 'translateX(0)';
+}
+
+        function openPage(page) {
+            window.location.href = page;
+        }
+
+        function changeUserName() {
+            const newUserName = prompt('أدخل اسم المستخدم الجديد:');
+            if (newUserName) {
+                // تحديث اسم المستخدم في القائمة الأعلى للنقاط
+                let topScores = JSON.parse(localStorage.getItem('topScores')) || [];
+                const userIndex = topScores.findIndex(item => item.user === currentUser);
+
+                if (userIndex > -1) {
+                    topScores[userIndex].user = newUserName;
+                    localStorage.setItem('topScores', JSON.stringify(topScores));
+                }
+
+                // تحديث اسم المستخدم الحالي في التخزين المحلي
+                localStorage.removeItem(currentUser + '_highScore');
+                localStorage.setItem(newUserName + '_highScore', highScore);
+
+                currentUser = newUserName;
+                localStorage.setItem('currentUser', currentUser);
+                userNameElement.textContent = currentUser;
+
+                // تحديث أعلى النقاط لاسم المستخدم الجديد
+                highScore = localStorage.getItem(currentUser + '_highScore') || 0;
+                highScoreElement.textContent = `أعلى النقاط: ${highScore}`;
+
+                // تحديث قائمة النقاط الأعلى
+                updateTopScores();
+            }
+        }
+    </script>
+</body>
+</html>

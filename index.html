@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رايق نوب</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background-color: #ffefd5; /* خلفية بلون الباستيل */
+            overflow: hidden;
+            margin: 0; /* إزالة هامش الصفحة */
+        }
+        .container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .main-text {
+            position: relative;
+            font-size: 4em;
+            margin-top: 40px; /* زيادة التباعد بين النصوص والزر */
+            z-index: 1;
+        }
+        .main-text span {
+            display: inline-block;
+        }
+        .red {
+            color: red;
+        }
+        .blue {
+            color: blue;
+        }
+        .pencil {
+            width: 50px;
+            position: absolute;
+            top: 0;
+            left: -60px;
+        }
+        .moving-text {
+            position: absolute;
+            font-size: 2em;
+            white-space: nowrap;
+            animation: moveX 10s linear infinite;
+            z-index: 0;
+        }
+        .moving-text.top {
+            top: 75px;
+        }
+        .moving-text.bottom {
+            bottom: 75px;
+        }
+        @keyframes moveX {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+        }
+        .cloud1 {
+            width: 200px;
+            height: 120px;
+            top: 20%;
+            left: 10%;
+            animation: moveCloud 30s linear infinite;
+        }
+        .cloud2 {
+            width: 250px;
+            height: 150px;
+            top: 40%;
+            left: 70%;
+            animation: moveCloud 40s linear infinite;
+        }
+        @keyframes moveCloud {
+            0% { left: -30%; }
+            100% { left: 110%; }
+        }
+
+        /* Styling for dropdown */
+        .dropdown-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: black; /* لون زر الثلاث شخطاط الأسود */
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease; /* تأثير التحريك */
+        }
+        .dropdown-btn.opened {
+            transform: translateX(calc(100% - -88px)); /* حركة الزر لفتح القائمة */
+        }
+        .dropdown {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9); /* لون خلفية القائمة */
+            z-index: 2;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .dropdown.active {
+            transform: translateX(0%);
+        }
+        .dropdown-item {
+            padding: 20px 0;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: white; /* لون الخط */
+        }
+        .dropdown-item:hover {
+            background-color: rgba(0, 0, 0, 0.7); /* تعتيم عند التحويل */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="moving-text top red">رايق</div>
+        <div class="main-text">
+            <img src="pencil.png" class="pencil" id="pencil">
+            <span class="red">رايق</span> <span class="blue">نوب</span>
+        </div>
+        <div class="moving-text bottom blue">نوب</div>
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+    </div>
+
+    <!-- Button for dropdown -->
+    <button class="dropdown-btn" onclick="toggleDropdown()">☰</button>
+
+    <!-- Dropdown content -->
+    <div id="dropdown" class="dropdown">
+        <div class="dropdown-item" onclick="openPage('rad.html')">لعبة رايق</div>
+        <div class="dropdown-item" onclick="openPage('MN.html')">أسئلة رايق</div>
+        <div class="dropdown-item" onclick="openPage('Ss.html')">سبايدر مان</div>
+    </div>
+
+    <script>
+        const pencil = document.getElementById('pencil');
+        const textElements = document.querySelectorAll('.main-text span');
+        let index = 0;
+
+        function drawText() {
+            if (index < textElements.length) {
+                textElements[index].style.visibility = 'visible';
+                index++;
+                setTimeout(drawText, 1000); // Adjust timing as needed
+            } else {
+                pencil.style.display = 'none';
+            }
+        }
+
+        window.onload = function() {
+            textElements.forEach(el => el.style.visibility = 'hidden');
+            drawText();
+        }
+
+        // Function to toggle dropdown visibility and move button
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.toggle('active');
+
+            const dropdownBtn = document.querySelector('.dropdown-btn');
+            dropdownBtn.classList.toggle('opened');
+        }
+
+        // Function to open page
+        function openPage(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>
